@@ -1,4 +1,7 @@
 *.git
 *.o
 *.swp
-triangulation
+triangulation.app
+Makefile
+bin
+
