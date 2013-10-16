@@ -8,6 +8,6 @@ Make project:
     qmake && make
 
 Add point:           double click
-Build convex hull:   press key 'Enter'
+Run triangulation:   press key 'Enter'
 Save points:         press key 'S'
 Load points:         press key 'L'
