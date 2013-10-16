@@ -84,6 +84,27 @@ namespace structures {
 
 }}
 
+namespace geom {
+namespace structures {
+
+    struct contour_builder_type
+    {
+        void add_point(point_type const & pt)
+        {
+            pts_.push_back(pt);
+        }
+        
+        contour_type get_result()
+        {
+            return contour_type(std::move(pts_));
+        }
+        
+    private:
+        std::vector<point_type> pts_;
+    };    
+    
+}}
+
 namespace visualization {
 
     using geom::structures::segment_type;
@@ -91,6 +112,7 @@ namespace visualization {
     struct drawer_type;
 
     void draw(drawer_type & drawer, const std::vector<segment_type> & segments);
+    void draw(drawer_type & drawer, const geom::structures::contour_type & cnt, bool draw_vertices = false);
 }
 
 namespace geom {

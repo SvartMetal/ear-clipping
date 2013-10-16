@@ -27,6 +27,15 @@ void triangulation_viewer::draw(drawer_type & drawer) const
     for (point_type const & pt : pts_)
         drawer.draw_point(pt, 3);
 
+    if (!pts_.empty()) {
+        drawer.set_color(Qt::red);
+        geom::structures::contour_builder_type builder;
+        for (auto point : pts_) {
+            builder.add_point(point);
+        }
+        visualization::draw(drawer, builder.get_result());
+    }
+
     if (segments_)
     {
         drawer.set_color(Qt::red);

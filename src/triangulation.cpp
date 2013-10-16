@@ -65,21 +65,6 @@ namespace structures {
         : pts_(std::move(pts))
     {}
     
-    struct contour_builder_type
-    {
-        void add_point(point_type const & pt)
-        {
-            pts_.push_back(pt);
-        }
-        
-        contour_type get_result()
-        {
-            return contour_type(std::move(pts_));
-        }
-        
-    private:
-        std::vector<point_type> pts_;
-    };
 }}
 
 namespace geom {
