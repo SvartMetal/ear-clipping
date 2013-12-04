@@ -1,5 +1,7 @@
 Simple visualizer of the ear clipping triangulation algorithm.
 
+Dependencies: Boost(>= 1.54), Qt, OpenGL, dcc(>= 4.6)
+
 Make project: 
     git submodule update &&
     cd visualization &&
@@ -11,3 +13,4 @@ Add point:           double click
 Run triangulation:   press key 'Enter'
 Save points:         press key 'S'
 Load points:         press key 'L'
+Delete points:       press key 'D'

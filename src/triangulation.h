@@ -6,20 +6,25 @@
 
 #include <list>
 
+#include <boost/variant/variant.hpp>
+
 namespace geom {
 namespace structures {
 
     using geom::structures::point_type;
 
-    class dc_list : public std::list<point_type> {
+    template <typename T> class dc_list : public std::list<T> {
     public:
 
-        typedef std::list<point_type>::iterator list_iterator;
+        typedef typename std::list<T>::iterator list_iterator;
         class Iterator;
         typedef Iterator iterator;
 
         dc_list() = default;
-        dc_list(std::list<point_type> && pts);
+
+        dc_list(std::list<T> && pts) 
+            : std::list<T>(std::move(pts))
+        {}
 
         class Iterator : public list_iterator {
         public:
@@ -73,11 +78,11 @@ namespace structures {
         };
 
         Iterator begin() {
-            return Iterator(*this, std::list<point_type>::begin());
+            return Iterator(*this, std::list<T>::begin());
         }
         
         Iterator end() {
-            return Iterator(*this, std::list<point_type>::end());
+            return Iterator(*this, std::list<T>::end());
         }
 
     };
@@ -129,11 +134,10 @@ namespace triangulation {
 
 namespace geom {
 namespace algorithms {
-namespace convex_hull {
+namespace intersection {
 
     using geom::structures::point_type;
-    using geom::structures::contour_type;
 
-    contour_type andrews(std::vector<point_type> pts); 
+    bool is_intersect(const std::list<point_type> & pts);
 }}}
 
