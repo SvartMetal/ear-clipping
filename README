@@ -1,6 +1,6 @@
 Simple visualizer of the ear clipping triangulation algorithm.
 
-Dependencies: Boost(>= 1.54), Qt, OpenGL, dcc(>= 4.6)
+Dependencies: Boost(>= 1.54), Qt, OpenGL, gcc(>= 4.6)
 
 Make project: 
     git submodule update &&
