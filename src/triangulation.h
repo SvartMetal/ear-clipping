@@ -29,13 +29,13 @@ namespace structures {
         class Iterator : public list_iterator {
         public:
 
-            Iterator & operator = (const Iterator & iter) {
+            Iterator & operator = (Iterator const & iter) {
                 auto temp(iter);
                 swap(temp);
                 return *this;
             }
 
-            Iterator(dc_list & list, const list_iterator & iter) 
+            Iterator(dc_list & list, list_iterator const & iter) 
                 : list_iterator(iter), list_(list) 
             {}
 
@@ -116,8 +116,8 @@ namespace visualization {
 
     struct drawer_type;
 
-    void draw(drawer_type & drawer, const std::vector<segment_type> & segments);
-    void draw(drawer_type & drawer, const geom::structures::contour_type & cnt, bool draw_vertices = false);
+    void draw(drawer_type & drawer, std::vector<segment_type> const & segments);
+    void draw(drawer_type & drawer, geom::structures::contour_type const & cnt, bool draw_vertices = false);
 }
 
 namespace geom {
@@ -128,7 +128,7 @@ namespace triangulation {
     using geom::structures::contour_type;
     using geom::structures::segment_type;
 
-    std::vector<segment_type> ear_clipping(const std::list<point_type> pts);
+    std::vector<segment_type> ear_clipping(std::list<point_type> const pts);
 
 }}}
 
@@ -137,7 +137,8 @@ namespace algorithms {
 namespace intersection {
 
     using geom::structures::point_type;
+    using geom::structures::segment_type;
 
-    bool is_intersect(const std::list<point_type> & pts);
+    bool is_intersection(std::list<point_type> const & pts, segment_type const & sgm);
 }}}
 

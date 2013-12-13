@@ -49,7 +49,7 @@ namespace predicates {
 
 namespace visualization {
 
-    void draw(drawer_type & drawer, const std::vector<segment_type> & segments) 
+    void draw(drawer_type & drawer, std::vector<segment_type> const & segments) 
     {
         for (const auto & line : segments) 
         {
@@ -180,11 +180,11 @@ namespace intersection {
     using geom::predicates::turn;
     using geom::structures::range_type;
 
-    bool is_point(const segment_type & s) {
+    bool is_point(segment_type const & s) {
         return s[0] == s[1];
     }
 
-    segment_type get_segment(const point_type & pt1 , const point_type & pt2) {
+    segment_type get_segment(point_type const & pt1 , point_type const & pt2) {
         int32 x1(pt1.x);
         int32 y1(pt1.y);
         int32 x2(pt2.x);
@@ -211,7 +211,7 @@ namespace intersection {
         NONE = 0, POINT, LINE
     };
 
-    boost::optional<range_type> intersect_range(const range_type & r1, const range_type & r2) {
+    boost::optional<range_type> intersect_range(range_type const & r1, range_type const & r2) {
         int32 ax = std::min(r1.inf, r1.sup);
         int32 bx = std::max(r1.inf, r1.sup);
         int32 cx = std::min(r2.inf, r2.sup);
@@ -236,7 +236,7 @@ namespace intersection {
         }
     }
 
-    intersection_type intersect_segment(segment_type& s1_, segment_type& s2_) {
+    intersection_type intersect_segment(segment_type const & s1_, segment_type const & s2_) {
         segment_type s1(get_segment(s1_[0], s1_[1]));
         segment_type s2(get_segment(s2_[0], s2_[1]));
 
@@ -301,28 +301,21 @@ namespace intersection {
     using geom::structures::dc_list;
     using geom::util::add_edges;
 
-    bool is_intersect(const std::list<point_type> & pts_) 
-    {
+    bool is_intersection(std::list<point_type> const & pts_, segment_type const & sgm) {
         dc_list<point_type> pts;
         pts.assign(pts_.begin(), pts_.end());
         dc_list<segment_type> segments;
 
         add_edges(segments, pts);
 
-        for (auto outer = segments.begin(); outer != segments.end(); ++outer) 
+        for (auto s = segments.begin(); s != segments.end(); ++s) 
         {
-            dc_list<segment_type>::iterator temp(outer);
-            if (++temp == segments.end()) 
+            if (*s != sgm && 
+                *s.prev() != sgm && 
+                *s.next() != sgm && 
+                intersect_segment(*s, sgm) != NONE) 
             {
-                break;
-            }
-            ++temp;
-            for (dc_list<segment_type>::iterator inner = temp; inner != segments.end(); ++inner)
-            {
-                if (intersect_segment(*inner, *outer) != NONE && *inner.next() != *outer) 
-                {
-                    return true;
-                }
+                return true;
             }
         }
 

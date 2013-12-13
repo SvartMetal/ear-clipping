@@ -23,6 +23,7 @@ private:
     std::unique_ptr<std::vector<segment_type>>  segments_;
     boost::optional<point_type>                 last_point_;
     bool                                        draw_trigger_ = false;
+    bool                                        intersection_ = false;
 };
 
 void triangulation_viewer::draw(drawer_type & drawer) const
@@ -66,7 +67,20 @@ void triangulation_viewer::print(printer_type & printer) const
 
 bool triangulation_viewer::on_double_click(point_type const & pt)
 {
-    pts_.push_back(pt);
+    if (pts_.size() > 0) 
+    {
+        segment_type sgm(pts_.back(), pt);
+        pts_.push_back(pt);
+        if (geom::algorithms::intersection::is_intersection(pts_, sgm)) 
+        {
+            intersection_ = true;
+        }
+    } 
+    else 
+    {
+        pts_.push_back(pt);
+    }
+
     segments_.reset();
     draw_trigger_ = false;
     return true;
@@ -83,8 +97,14 @@ bool triangulation_viewer::on_key(int key)
     switch (key)
     {
     case Qt::Key_Return: 
-        if (pts_.size() >= 3 && !geom::algorithms::intersection::is_intersect(pts_))
+        if (pts_.size() >= 3 && !intersection_)
         {
+            segment_type sgm(pts_.back(), pts_.front());
+            if (geom::algorithms::intersection::is_intersection(pts_, sgm)) 
+            {
+                break;
+            }
+
             segments_.reset(new std::vector<segment_type>(
                 geom::algorithms::triangulation::ear_clipping(pts_)
             ));
@@ -116,16 +136,25 @@ bool triangulation_viewer::on_key(int key)
                 std::ifstream in(filename.c_str());
                 std::istream_iterator<point_type> beg(in), end;
                 pts_.assign(beg, end);
+
                 segments_.reset();
+                draw_trigger_ = false;
+                intersection_ = false;
                 return true;
             }
         }
         break;
     case Qt::Key_D:
         {
-            pts_.assign(pts_.end(), pts_.end());
+            pts_.clear();
             segments_.reset();
             draw_trigger_ = false;
+            intersection_ = false;
+        }
+    case Qt::Key_Escape:
+        {
+            draw_trigger_ = false;
+            segments_.reset();
         }
     }
     return false;
