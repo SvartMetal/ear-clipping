@@ -4,6 +4,9 @@
 #include "visualization/viewer_adapter.h"
 #include <boost/optional/optional.hpp>
 
+#include <iostream>
+#include <algorithm>
+
 using geom::structures::point_type;
 using geom::structures::segment_type;
 using geom::structures::dc_list; 
@@ -84,8 +87,8 @@ namespace geom {
 namespace algorithms {
 namespace triangulation {
 
-
-    predicates::turn_type get_default_turn(dc_list<point_type> & list) 
+    template <typename T>
+    predicates::turn_type get_default_turn(dc_list<T> & list) 
     {
         using namespace predicates;
         using namespace structures;
@@ -128,46 +131,121 @@ namespace triangulation {
         return false;
     }
 
+    using geom::structures::vertex_type;
+    using geom::predicates::turn_type;
+    using geom::predicates::turn;
+
+    dc_list<vertex_type> construct_vertices(std::list<point_type>& pts) 
+    {
+        pts.erase(boost::unique<boost::return_found>(pts), pts.end());
+
+        dc_list<vertex_type> lst;
+        lst.assign(pts.begin(), pts.end());
+
+        auto default_turn = get_default_turn(lst);
+        auto end = lst.end();
+
+        for (auto it = lst.begin(); it != end; ++it)
+        {
+            auto a(*it.prev()), b(*it), c(*it.next());
+            it->convex = predicates::turn(a, b, c) == default_turn;
+        }
+
+        return lst;
+    }
+
+    bool is_ear(dc_list<vertex_type>& lst, dc_list<vertex_type>::iterator& it, turn_type default_turn) 
+    {
+        auto a(*it.prev()), b(*it), c(*it.next());
+
+        if (predicates::turn(a, b, c) != default_turn) 
+        {
+            return false;
+        }
+
+        for (auto v : lst) 
+        {
+            if (v != a && v != b && v != c && is_inside_triangle(v, a, b, c))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    std::list<dc_list<vertex_type>::iterator> find_ears(dc_list<vertex_type>& lst, turn_type default_turn)
+    {
+        std::list<dc_list<vertex_type>::iterator> ears;
+
+        auto end = lst.end();
+
+        for (auto it = lst.begin(); it != end; ++it)
+        {
+            if (is_ear(lst, it, default_turn))
+            {
+                it->ear = true;
+                ears.push_back(it);
+            }
+        }
+
+        return ears;
+    }
+
     std::vector<segment_type> ear_clipping(std::list<point_type> pts) 
     {
 
+        dc_list<vertex_type> lst = construct_vertices(pts);
+        auto default_turn = get_default_turn(lst);
+
+        auto ears = find_ears(lst, default_turn);
+
         std::vector<segment_type> edges;
 
-        pts.erase(boost::unique<boost::return_found>(pts), pts.end());
-
-        dc_list<point_type> list;
-        list.assign(pts.begin(), pts.end());
-
-        auto default_turn = get_default_turn(list);
-
-        auto v_iter = list.begin();
-        while (list.size() > 3) 
+        size_t lst_size = lst.size();
+        while (lst_size > 3 && !ears.empty())
         {
-            auto a(*v_iter.prev()), b(*v_iter), c(*v_iter.next());
-            v_iter = v_iter.next();
+            auto it = ears.front();
+            auto prev(it.prev()), next(it.next());
+            
+            edges.push_back(segment_type(*prev, *next));
 
-            if (predicates::turn(a, b, c) != default_turn) 
-            {
-                continue;
-            }
+            lst.erase(it);
+            ears.pop_front();
 
-            bool is_ear = true;
-            for (auto p : list) 
+            auto update_vertex = [&](dc_list<vertex_type>::iterator& v)
             {
-                if (p != a && p != b && p != c && is_inside_triangle(p, a, b, c)) 
+                auto a(*v.prev()), b(*v), c(*v.next());
+                v->convex = turn(a, b, c) == default_turn;
+                bool was_ear = v->ear;
+
+                if (v->convex) 
                 {
-                    is_ear = false;
-                    break;
-                }
-            }
+                    if (is_ear(lst, v, default_turn))
+                    {
+                        if (!was_ear)
+                        {
+                            v->ear = true;
+                            ears.push_front(v);
+                        }
+                    } 
+                    else 
+                    {
+                        if (was_ear)
+                        {
+                            v->ear = false;
+                            ears.remove(v);
+                        }
+                    }
+                } 
+            };
 
-            if (!is_ear) continue;
+            update_vertex(prev);
+            update_vertex(next);
 
-            edges.push_back(segment_type(a, c));
-            list.erase(v_iter.prev());
+            lst_size--;
         }
 
-        return edges;
+        return edges;       
     }
 
 }}}
@@ -194,7 +272,13 @@ namespace intersection {
         int32 b_end;
 
         #define GENERATE(f, res, first, second) \
-        if (x1 == x2) { res = f(first, second); } else if (x1 < x2) { res = first; } else { res = second; }
+        if (x1 == x2) { \
+            res = f(first, second); \
+        } else if (x1 < x2) { \
+            res = first; \
+        } else { \
+            res = second; \
+        }
 
         GENERATE(std::min, a_end, y1, y2);
         GENERATE(std::max, b_end, y2, y1);

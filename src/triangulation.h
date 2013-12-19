@@ -13,12 +13,36 @@ namespace structures {
 
     using geom::structures::point_type;
 
+    struct vertex_type : point_type {
+
+        vertex_type(int32 x, int32 y)
+            : point_type(x, y)
+        {}
+
+        vertex_type(const point_type& point)
+            : point_type(point.x, point.y)
+        {}
+
+        vertex_type& operator = (vertex_type const & v) 
+        {
+            x = v.x;
+            y = v.y;
+            convex = v.convex;
+            ear = v.ear;
+            return *this;
+        }
+
+        bool convex = true;
+        bool ear = false;
+    };
+
     template <typename T> class dc_list : public std::list<T> {
     public:
 
         typedef typename std::list<T>::iterator list_iterator;
         class Iterator;
         typedef Iterator iterator;
+        typedef Iterator const_iterator;
 
         dc_list() = default;
 
