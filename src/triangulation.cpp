@@ -202,7 +202,7 @@ namespace triangulation {
         std::vector<segment_type> edges;
 
         size_t lst_size = lst.size();
-        while (lst_size > 3 && !ears.empty())
+        while (lst_size > 3)
         {
             auto it = ears.front();
             auto prev(it.prev()), next(it.next());
